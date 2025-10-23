@@ -15,9 +15,11 @@ export default function useGetCategoriesWithPosts(filter: HomeFilterInterface) {
 
       getNextPageParam: (lastPage, allPages, lastPageParam) => {
         if (
+
           allPages.length === 1 &&
           allPages[0].data.posts.every((cat) => cat.posts.length === 0)
         ) {
+          
           return undefined;
         }
 

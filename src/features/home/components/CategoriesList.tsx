@@ -20,26 +20,28 @@ export default function CategoriesList({
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!bottomRef.current || !hasNextPage) return;
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-    const observer = new IntersectionObserver(
+  useEffect(() => {
+    const bottomElement = bottomRef.current;
+    if (!bottomElement || !hasNextPage) return;
+
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isFetchingNextPage) {
+        const first = entries[0];
+        if (first.isIntersecting && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      {
-        root: null,
-        rootMargin: "300px",
-        threshold: 1.0,
-      }
+      { rootMargin: "300px" }
     );
 
-    observer.observe(bottomRef.current);
+    observerRef.current.observe(bottomElement);
 
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+    return () => observerRef.current?.disconnect();
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
 
   const allEmpty =
     categories.length > 0 &&
@@ -50,7 +52,9 @@ export default function CategoriesList({
       {allEmpty ? (
         <div className="w-full flex flex-col justify-center items-center py-16">
           <NoDataPlaceHolder />
-          <h4 className="font-bold text-[#000] text-[18px] mb-2">{t("no_available")}</h4>
+          <h4 className="font-bold text-[#000] text-[18px] mb-2">
+            {t("no_available")}
+          </h4>
           <p className="text-sm text-gray-600">{t("no_available_text")}</p>
         </div>
       ) : (
