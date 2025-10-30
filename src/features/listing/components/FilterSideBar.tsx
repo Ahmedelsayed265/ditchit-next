@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import useUrlFilters from "@/hooks/useFilterParams";
 import AccordionFilter from "./AccordionFilter";
+import Link from "next/link";
 
 export default function FilterSideBar({
   categories,
@@ -72,6 +73,12 @@ export default function FilterSideBar({
             <div className="w-full rounded-xl border border-[var(--lightBorderColor)]">
               <AccordionFilter categories={categories} />
             </div>
+            <button
+              className=" flex items-center justify-center bg-green-500 text-[14px] border rounded-full px-12 py-3 text-white mt-auto"
+              onClick={() => setOpenFilter(false)}
+            >
+              See Results
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -81,6 +88,12 @@ export default function FilterSideBar({
           <AccordionFilter categories={categories} />
         </div>
       </div>
+      <Link
+        href={"/posts"}
+        className=" flex items-center justify-center py-3  mt-auto hover:scale-105"
+      >
+        Remove Filter
+      </Link>
     </div>
   );
 }

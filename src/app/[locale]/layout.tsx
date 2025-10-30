@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "DitchIt",
     description:
-      "Buy, Sell, DitchIt - The Win-Win Marketplace. DitchIt offers a thrilling experience: list in 30 seconds, explore new arrivals daily, and connect with buyers and sellers in a secure community. Build your reputation, find hidden gems, and join millions of users shopping locally!",
+      "Buy, Sell, DitchIt - The Win-Win Marketplace. DitchIt offers a thrilling experience: list in 30 seconds, explore new arrivals daily, and connect with buyers and sellers in a secure community.",
     url: "https://DitchIt.com/",
     type: "website",
     images: [
@@ -65,14 +65,26 @@ export const metadata: Metadata = {
   },
 };
 
+// ✅ Fix: `params` should NOT be awaited (it’s a plain object)
 type Props = {
   children: React.ReactNode;
-  params: Promise<{ "country-locale": string }>;
+  params: Promise<{ locale: string }>;
 };
 
 export default async function RootLayout({ children, params }: Props) {
+  const { locale } = await params;
+
+  // Validate locale
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  // Required for next-intl
+  setRequestLocale(locale);
+
   const cookieStore = await cookies();
 
+  //  Initialize location filter defaults
   const initialFilter: FilterState = {
     latitude: cookieStore.get("latitude")?.value || "39.8283",
     longitude: cookieStore.get("longitude")?.value || "-98.5795",
@@ -82,44 +94,48 @@ export default async function RootLayout({ children, params }: Props) {
     kilometers: Number(cookieStore.get("kilometers")?.value ?? 60),
   };
 
-  const data = await getProfile();
-  const { data: rooms } = await getAllRoomsForSocket();
+  //  Fetch user + chat data in parallel for performance
+  const [profileRes, roomsRes, messages] = await Promise.all([
+    getProfile(),
+    getAllRoomsForSocket(),
+    getMessages({ locale }),
+  ]);
 
-  const { "country-locale": fullLocale } = await params;
-  const lang = fullLocale.split("-")[0];
-
-  if (!hasLocale(routing.locales, fullLocale)) {
-    notFound();
-  }
-
-  setRequestLocale(fullLocale);
-  const messages = await getMessages({ locale: fullLocale });
+  const data = profileRes;
+  const rooms = roomsRes?.data;
+  const lang = locale;
 
   return (
-    <html lang={lang} dir={RTL_LANGUAGES?.includes(lang) ? "rtl" : "ltr"}>
+    <html lang={lang} dir={RTL_LANGUAGES.includes(lang) ? "rtl" : "ltr"}>
       <body>
         <NextTopLoader showSpinner={false} color="#00a650" />
         <HydrateHomeFilter initialFilter={initialFilter} />
+
         <Toaster
           expand={false}
           richColors
           theme="light"
           position="bottom-right"
         />
+
         <ProvidersContainer
           rooms={rooms}
-          locale={fullLocale}
+          locale={locale}
           messages={messages}
           data={data}
         >
           <Script
-            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&language=${lang}&region=${lang.toUpperCase()}`}
+            src={`https://maps.googleapis.com/maps/api/js?key=${
+              process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+            }&libraries=places&language=${lang}&region=${lang.toUpperCase()}`}
             strategy="beforeInteractive"
           />
 
-          {!data.token && <GoogleOneTapAuth />}
+          {!data?.token && <GoogleOneTapAuth />}
+
           <Header locale={lang} data={data} />
           <main className="min-h-[calc(100vh-316px)]">{children}</main>
+
           <audio id="notify-sound" src="/sounds/notify.mp3" preload="auto" />
           <Footer />
         </ProvidersContainer>

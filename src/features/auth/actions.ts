@@ -95,7 +95,7 @@ export async function checkCodeAction(formData: FormData) {
     const responseData = response.data;
 
     if (responseData.code === 200) {
-      (await cookies()).set("token", responseData.data.auth.token, {
+      (await cookies()).set("tokenRestPass", responseData.data.auth.token, {
         path: "/",
         httpOnly: true,
         secure: true,
@@ -103,6 +103,12 @@ export async function checkCodeAction(formData: FormData) {
         maxAge: 60 * 60 * 24 * 7,
       });
     }
+    // if (responseData.code === 200) {
+    //   (await cookies()).set("verifiedReset", "true", {
+    //     path: "/",
+    //     maxAge: 60 * 5, // 5 دقائق فقط
+    //   });
+    // }
 
     return responseData;
   } catch (error: unknown) {
