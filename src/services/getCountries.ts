@@ -1,5 +1,6 @@
 import { CountriesResponse } from "@/types/country";
 import { API_URL } from "@/utils/constants";
+// import { cookies } from "next/headers";
 
 export async function getCountries(
   lang: string,

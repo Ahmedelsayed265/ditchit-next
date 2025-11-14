@@ -61,15 +61,17 @@ export default function SearchByModal({
   const { filter, setFilter } = useHomeFilter();
   const [isPending, startTransition] = useTransition();
 
-  const [selectedCountry, setSelectedCountry] =
-    useState<string>(initialCountry);
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+
+  useEffect(() => {
+    setSelectedCountry(initialCountry);
+  }, [user]);
 
   // Countries pagination state for Select
   const [countryOptions, setCountryOptions] = useState<Country[]>(countries);
   const [countryPage, setCountryPage] = useState<number>(1);
   const [countriesHasMore, setCountriesHasMore] = useState<boolean>(true);
   const [countriesLoading, setCountriesLoading] = useState<boolean>(false);
-
   const loadMoreCountries = async () => {
     if (countriesLoading || !countriesHasMore) return;
     try {
@@ -97,7 +99,8 @@ export default function SearchByModal({
 
   // Memoize selected country using the current paginated options
   const countryData = useMemo(
-    () => countryOptions.find((el) => el.id === Number(selectedCountry)) || null,
+    () =>
+      countryOptions.find((el) => el.id === Number(selectedCountry)) || null,
     [countryOptions, selectedCountry]
   );
 
@@ -107,6 +110,23 @@ export default function SearchByModal({
     address?: string;
     kilometers: number;
   } | null>(null);
+
+  useEffect(() => {
+    setSelectedLocation(
+      countries.find((c) => c.id === Number(selectedCountry))
+        ? {
+            lat:
+              countries.find((c) => c.id === Number(selectedCountry))
+                ?.center_lat || 0,
+            lng:
+              countries.find((c) => c.id === Number(selectedCountry))
+                ?.center_lng || 0,
+            address: filter.address || "",
+            kilometers: filter.kilometers || 60,
+          }
+        : null
+    );
+  }, [selectedCountry]);
 
   const selectedMethod = filter.delivery_method;
 

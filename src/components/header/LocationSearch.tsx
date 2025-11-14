@@ -11,29 +11,32 @@ import ZipSearch from "../modals/ZipSearch";
 import LanguagesAndCountries from "./LanguagesAndCountries";
 import { User } from "@/types/user";
 import { getCookie } from "@/lib/utils";
+import { useAuthStore } from "@/features/auth/store";
 
 export default function LocationSearch({
   hideSm,
   countries,
   profileData,
+  selectedCountryFromApi,
 }: {
   hideSm: boolean;
   countries: Country[];
   profileData: User | null;
+  selectedCountryFromApi: Country | null;
 }) {
   const { filter } = useHomeFilter();
   const [show, setShow] = useState(false);
   const [showZipCodeSearch, setZipCodeSearch] = useState(false);
-
+  const { user } = useAuthStore();
   const router = useRouter();
   const t = useTranslations("header");
 
-  const [currentCountry, setCurrentCountry] = useState<string>("us");
+  const [, setCurrentCountry] = useState<string>("us");
 
   useEffect(() => {
     if (profileData) {
       const cookieCountry = getCookie("countryId");
-      setCurrentCountry(cookieCountry || profileData.country_id || "us");
+      setCurrentCountry(profileData.country_id || cookieCountry || "us");
     } else {
       setCurrentCountry("us");
     }
@@ -50,18 +53,21 @@ export default function LocationSearch({
   };
 
   const memoizedCountries = useMemo(() => countries || [], [countries]);
-  const memoizedProfileData = useMemo(() => profileData || null, [profileData]);
+  // const memoizedProfileData = useMemo(() => profileData || null, [profileData]);
 
   return (
     <div
       className={`items-center flex-1 gap-2 ${
-        hideSm ? "md:flex hidden" : "flex md:flex-row flex-col items-start"
+        hideSm
+          ? "md:flex hidden"
+          : "flex md:flex-row flex-col overflow-x-hidden items-start"
       }`}
     >
       <div className="flex items-center gap-8 w-full md:flex-row flex-row-reverse">
         <LanguagesAndCountries
           countries={memoizedCountries}
-          profileData={memoizedProfileData}
+          // profileData={memoizedProfileData}
+          selectedCountryFromApi={selectedCountryFromApi}
         />
 
         <form
@@ -98,10 +104,9 @@ export default function LocationSearch({
             {t("current_location")}
           </p>
           <h4 className="text-[var(--darkColor)] capitalize overflow-hidden [display:-webkit-box] [-webkit-line-clamp:1] [-webkit-box-orient:vertical] text-[16px]">
-            {filter.address
+            {filter.address && getCookie("countryId")
               ? filter.address
-              : countries.find((c) => c.id === Number(currentCountry))?.title ||
-                "United States"}
+              : user?.address || "United States"}
           </h4>
         </div>
       </div>
@@ -110,7 +115,7 @@ export default function LocationSearch({
         show={show}
         handleClose={() => setShow(false)}
         countries={countries}
-        user={profileData}
+        user={user}
       />
 
       <ZipSearch

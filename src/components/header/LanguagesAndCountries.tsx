@@ -137,16 +137,19 @@ import { Country } from "@/types/country";
 import Link from "next/link";
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
-import { User } from "@/types/user";
+// import { User } from "@/types/user";
 import { getCookie } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/features/auth/store";
 
 export default function LanguagesAndCountries({
   countries,
-  profileData,
+  selectedCountryFromApi
+  // profileData,
 }: {
   countries: Country[];
-  profileData: User | null;
+  selectedCountryFromApi: Country | null;
+  // profileData: User | null;
 }) {
   const pathname = usePathname();
   const locale = useLocale();
@@ -154,26 +157,28 @@ export default function LanguagesAndCountries({
   const queryString = searchParams.toString();
   const queryClient = useQueryClient();
   const t = useTranslations("common");
+  const { user } = useAuthStore();
 
   const [currentCountryFlag, setCurrentCountryFlag] = useState<string>(
-    countries.find((c) => c.code === "US")?.flag ?? "/placeholder-flag.png"
-  );
+    selectedCountryFromApi?.flag ?? "/placeholder-flag.png"
+  );  
 
   useEffect(() => {
     const countryFromCookie = getCookie("countryId");
     let selectedCountry: Country | undefined;
-
-    if (profileData && countryFromCookie) {
+    // console.log("profileData it is changed" , profileData);
+    
+    if (user && countryFromCookie) {
       // user + cookie → use cookie
       selectedCountry = countries.find(
         (c) => c.id?.toString() === countryFromCookie
       );
-    } else if (profileData && !countryFromCookie) {
+    } else if (user && !countryFromCookie) {
       // user + no cookie → use user's profile country
       selectedCountry = countries.find(
-        (c) => c.id === Number(profileData.country_id)
+        (c) => c.id === Number(user.country_id)
       );
-    } else if (!profileData && countryFromCookie) {
+    } else if (!user && countryFromCookie) {
       // no user + cookie → use cookie
       selectedCountry = countries.find(
         (c) => c.id?.toString() === countryFromCookie
@@ -182,9 +187,9 @@ export default function LanguagesAndCountries({
       // no user + no cookie → default to US
       selectedCountry = countries.find((c) => c.code === "US");
     }
-
-    setCurrentCountryFlag(selectedCountry?.flag ?? "/placeholder-flag.png");
-  }, [countries, profileData]);
+    
+    setCurrentCountryFlag(selectedCountryFromApi?.flag ?? selectedCountry?.flag ?? "/placeholder-flag.png");
+  }, [countries, user , selectedCountryFromApi]);
 
   function changeLang(newLang: string) {
     return `/${newLang}${pathname}${queryString ? `?${queryString}` : ""}`;
