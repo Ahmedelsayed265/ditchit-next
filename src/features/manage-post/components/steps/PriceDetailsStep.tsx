@@ -44,10 +44,10 @@ export default function PriceDetailsStep({
 
     const isValid = await trigger("price");
     if (!selectedDelivery) {
-      setDeliveryError(true)
-      return
-    }else{
-      setDeliveryError(false)
+      setDeliveryError(true);
+      return;
+    } else {
+      setDeliveryError(false);
     }
 
     if (isValid) {
@@ -94,7 +94,6 @@ export default function PriceDetailsStep({
           />
           <Label htmlFor="firm_price">{t("firm_price")}</Label>
         </div>
-
         <div className="flex items-start gap-3">
           <Checkbox
             id="virtual_tour"
@@ -106,7 +105,6 @@ export default function PriceDetailsStep({
           <Label htmlFor="virtual_tour">{t("virtual_tour")}</Label>
         </div>
       </div>
-
       <div>
         <h6 className="font-bold text-sm mb-2">{t("delivery_methods")}</h6>
         <div className="flex gap-2 md:flex-row flex-col">
@@ -132,10 +130,16 @@ export default function PriceDetailsStep({
             </label>
           ))}
         </div>
-        {deliveryError && <p className="text-red-500 mt-2 text-xs">{t("choose_delivery_methods")}</p>}
+        
+        {deliveryError && (
+          <p className="text-red-500 mt-2 text-xs">
+            {t("choose_delivery_methods")}
+          </p>
+        )}
       </div>
 
       <FormFooter
+
         back={back}
         nextBtnText={postId ? t("update_post") : t("confirm_publish")}
       />
